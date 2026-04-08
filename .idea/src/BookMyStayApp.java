@@ -14,58 +14,48 @@ class Reservation {
         this.price = price;
     }
 
-    public double getPrice() {
-        return price;
-    }
-
     public String getReservationId() {
         return reservationId;
+    }
+}
+
+// Service Class
+class AddOnService {
+    private String serviceName;
+    private double cost;
+
+    public AddOnService(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
+    }
+
+    public double getCost() {
+        return cost;
     }
 
     @Override
     public String toString() {
-        return "Reservation ID: " + reservationId +
-                ", Guest: " + guestName +
-                ", Room: " + roomType +
-                ", Price: ₹" + price;
+        return serviceName + " (₹" + cost + ")";
     }
 }
 
-// Booking History Class
-class BookingHistory {
-    private List<Reservation> reservations = new ArrayList<>();
+// Add-On Service Manager
+class AddOnServiceManager {
+    private Map<String, List<AddOnService>> serviceMap = new HashMap<>();
 
-    public void addReservation(Reservation reservation) {
-        reservations.add(reservation);
+    public void addService(String reservationId, AddOnService service) {
+        serviceMap.computeIfAbsent(reservationId, k -> new ArrayList<>()).add(service);
     }
 
-    public List<Reservation> getAllReservations() {
-        return reservations;
+    public List<AddOnService> getServices(String reservationId) {
+        return serviceMap.getOrDefault(reservationId, new ArrayList<>());
     }
-}
 
-// Report Service Class
-class BookingReportService {
-
-    public void generateReport(List<Reservation> reservations) {
-
-        System.out.println("\n===== BOOKING HISTORY REPORT =====");
-
-        if (reservations.isEmpty()) {
-            System.out.println("No bookings found.");
-            return;
-        }
-
-        double totalRevenue = 0;
-
-        for (Reservation r : reservations) {
-            System.out.println(r);
-            totalRevenue += r.getPrice();
-        }
-
-        System.out.println("----------------------------------");
-        System.out.println("Total Bookings: " + reservations.size());
-        System.out.println("Total Revenue: ₹" + totalRevenue);
+    public double calculateTotalCost(String reservationId) {
+        return getServices(reservationId)
+                .stream()
+                .mapToDouble(AddOnService::getCost)
+                .sum();
     }
 }
 
@@ -78,21 +68,24 @@ public class BookMyStayApp {
         System.out.println(" Book My Stay App ");
         System.out.println("=====================================");
 
-        // Create Booking History
-        BookingHistory history = new BookingHistory();
+        Reservation reservation = new Reservation("RES123", "John", "Deluxe", 3000);
 
-        // Simulate confirmed bookings
-        Reservation r1 = new Reservation("RES101", "Alice", "Deluxe", 3000);
-        Reservation r2 = new Reservation("RES102", "Bob", "Suite", 5000);
-        Reservation r3 = new Reservation("RES103", "Charlie", "Standard", 2000);
+        AddOnServiceManager manager = new AddOnServiceManager();
 
-        // Add to history
-        history.addReservation(r1);
-        history.addReservation(r2);
-        history.addReservation(r3);
+        // Add services
+        manager.addService("RES123", new AddOnService("Breakfast", 500));
+        manager.addService("RES123", new AddOnService("Airport Pickup", 1200));
+        manager.addService("RES123", new AddOnService("Spa Access", 1500));
 
-        // Generate report
-        BookingReportService reportService = new BookingReportService();
-        reportService.generateReport(history.getAllReservations());
+        // Display services
+        System.out.println("\nServices for Reservation: " + reservation.getReservationId());
+
+        for (AddOnService service : manager.getServices("RES123")) {
+            System.out.println(service);
+        }
+
+        System.out.println("\nTotal Add-On Cost: ₹" + manager.calculateTotalCost("RES123"));
+
+        System.out.println("\nBooking remains unchanged. Add-ons applied successfully.");
     }
 }
